@@ -26,3 +26,14 @@
 - Microsoft intentionally skipped (offer already in hand).
 - Quant shops (jane street, citadel, etc.) deferred to a later phase per brief.
 - `COMPANIES_DISABLED = set()` added so a company can be muted without deletion.
+
+## 2026-04-23 (second batch)
+
+### Expanded company list — round 2
+Added 29 verified companies (all hit via live API calls, non-zero match counts confirmed locally):
+
+- **Greenhouse (+19):** roblox, block (Square/Cash App), gemini, sofi, marqeta, samsara, rubrik, mongodb, elastic, gitlab, dropbox, lyft, xai, together (togetherai), spacex, neuralink, cockroachdb (cockroachlabs), ridgeline, squarespace.
+- **Ashby (+9):** harvey, sierra, cohere, characterai, elevenlabs, replit, runway, polymarket, kalshi.
+- **Lever (+1):** mistral.
+
+Local test: 2758 matching roles across 59 companies, 0 errors. SpaceX alone contributes 815 (giant engineering org; expected).
