@@ -37,3 +37,11 @@ Added 29 verified companies (all hit via live API calls, non-zero match counts c
 - **Lever (+1):** mistral.
 
 Local test: 2758 matching roles across 59 companies, 0 errors. SpaceX alone contributes 815 (giant engineering org; expected).
+
+### Task 5a — SimplifyJobs community feed
+- New scraper type `simplify` reads https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/.github/scripts/listings.json (~20k records, ~15MB per fetch).
+- One `simplify-bigtech` entry filters the feed to big tech whose own boards are too painful to scrape directly (Google batchexecute, Meta GraphQL, Apple/Nvidia Workday, TikTok/ByteDance). Amazon included here since we're not building a direct scraper for now.
+- Each record honored for `active` + `is_visible`, then put through the same `matches_keywords()` filter as other sources.
+- ID prefix `simplify-<uuid>`.
+- Dropped the now-redundant `scrape_google` / `scrape_meta` / `scrape_apple` / `scrape_amazon` / `scrape_nvidia` stubs and their COMPANIES entries.
+- Local test: simplify-bigtech contributes 215 matches (TikTok 128, ByteDance 32, Meta 21, NVIDIA 12, Netflix 8, Amazon 8, Apple 6, Google 0). Notification latency for these companies now ~1-2h (Simplify contributor lag) + ~10min (our cron) = tolerable for FAANG-class postings with wide windows.

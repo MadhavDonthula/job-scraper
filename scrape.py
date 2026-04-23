@@ -74,15 +74,16 @@ COMPANIES = [
     {"name": "palantir",   "type": "lever", "slug": "palantir"},
     {"name": "mistral",    "type": "lever", "slug": "mistral"},
 
-    # --- Custom (Workday / bespoke career sites — scrapers not yet implemented) ---
-    {"name": "doordash",   "type": "custom", "fn": "scrape_doordash"},
-    {"name": "datadog",    "type": "custom", "fn": "scrape_datadog"},
-    {"name": "rippling",   "type": "custom", "fn": "scrape_rippling"},
-    {"name": "google",     "type": "custom", "fn": "scrape_google"},
-    {"name": "meta",       "type": "custom", "fn": "scrape_meta"},
-    {"name": "apple",      "type": "custom", "fn": "scrape_apple"},
-    {"name": "amazon",     "type": "custom", "fn": "scrape_amazon"},
-    {"name": "nvidia",     "type": "custom", "fn": "scrape_nvidia"},
+    # --- SimplifyJobs (community-maintained feed covering big tech whose job boards
+    #     are painful to scrape directly: Google batchexecute, Meta GraphQL,
+    #     Apple/Nvidia Workday). ~1-2h contributor lag, fine for those companies. ---
+    {"name": "simplify-bigtech", "type": "simplify",
+     "filter_to": ["google", "meta", "apple", "amazon", "nvidia", "tiktok", "bytedance", "netflix"]},
+
+    # --- Custom (bespoke career sites — each needs its own scraper) ---
+    {"name": "doordash", "type": "custom", "fn": "scrape_doordash"},  # careersatdoordash.com
+    {"name": "datadog",  "type": "custom", "fn": "scrape_datadog"},   # careers.datadoghq.com
+    {"name": "rippling", "type": "custom", "fn": "scrape_rippling"},  # rippling.com/careers
 ]
 
 # Companies to temporarily skip without deleting from COMPANIES.
@@ -162,22 +163,42 @@ def scrape_ashby(company):
     ]
 
 
+SIMPLIFY_URL = "https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/.github/scripts/listings.json"
+
+
+def scrape_simplify(company):
+    r = requests.get(SIMPLIFY_URL, timeout=30)
+    r.raise_for_status()
+    targets = {c.lower() for c in company.get("filter_to", [])}
+    results = []
+    for job in r.json():
+        if job.get("company_name", "").lower() not in targets:
+            continue
+        if not job.get("active", True) or not job.get("is_visible", True):
+            continue
+        if not matches_keywords(job.get("title", "")):
+            continue
+        results.append({
+            "id": f"simplify-{job['id']}",
+            "company": job["company_name"],
+            "title": job["title"],
+            "url": job["url"],
+        })
+    return results
+
+
 SCRAPERS = {
     "greenhouse": scrape_greenhouse,
     "lever":      scrape_lever,
     "ashby":      scrape_ashby,
+    "simplify":   scrape_simplify,
 }
 
 
-# --- Custom scraper stubs. Each needs a bespoke scraper (Workday/careers page). ---
-def scrape_doordash(): return []   # TODO: careers.doordash.com (Workday)
-def scrape_datadog():  return []   # TODO: careers.datadoghq.com (Workday)
-def scrape_rippling(): return []   # TODO: rippling.com/careers (Workday)
-def scrape_google():   return []   # TODO: google.com/about/careers/applications/jobs/results
-def scrape_meta():     return []   # TODO: metacareers.com
-def scrape_apple():    return []   # TODO: jobs.apple.com
-def scrape_amazon():   return []   # TODO: amazon.jobs
-def scrape_nvidia():   return []   # TODO: nvidia.wd5.myworkdayjobs.com
+# --- Custom scraper stubs. Each needs a bespoke scraper on its own careers site. ---
+def scrape_doordash(): return []   # TODO: careersatdoordash.com (custom JS-rendered)
+def scrape_datadog():  return []   # TODO: careers.datadoghq.com (custom, not Workday)
+def scrape_rippling(): return []   # TODO: rippling.com/careers (custom)
 
 
 def notify(job):
