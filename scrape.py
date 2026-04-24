@@ -6,7 +6,7 @@ import requests
 STATE_FILE = pathlib.Path("seen.json")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 
-# Company registry. Each entry has type in {"greenhouse","lever","ashby","custom"}.
+# Company registry. Each entry has type in {"greenhouse","lever","ashby","simplify"}.
 # Slugs verified by hitting each ATS API directly (see CHANGELOG).
 COMPANIES = [
     # --- Greenhouse ---
@@ -74,16 +74,24 @@ COMPANIES = [
     {"name": "palantir",   "type": "lever", "slug": "palantir"},
     {"name": "mistral",    "type": "lever", "slug": "mistral"},
 
-    # --- SimplifyJobs (community-maintained feed covering big tech whose job boards
-    #     are painful to scrape directly: Google batchexecute, Meta GraphQL,
-    #     Apple/Nvidia Workday). ~1-2h contributor lag, fine for those companies. ---
+    # --- SimplifyJobs (community-maintained feed covering any MSFT+ tier company
+    #     whose job board we don't scrape directly. ~1-2h contributor lag, fine
+    #     for companies with wide intern-application windows). ---
     {"name": "simplify-bigtech", "type": "simplify",
-     "filter_to": ["google", "meta", "apple", "amazon", "nvidia", "tiktok", "bytedance", "netflix"]},
-
-    # --- Custom (bespoke career sites — each needs its own scraper) ---
-    {"name": "doordash", "type": "custom", "fn": "scrape_doordash"},  # careersatdoordash.com
-    {"name": "datadog",  "type": "custom", "fn": "scrape_datadog"},   # careers.datadoghq.com
-    {"name": "rippling", "type": "custom", "fn": "scrape_rippling"},  # rippling.com/careers
+     "filter_to": [
+         # Big tech with painful boards (batchexecute / GraphQL / Workday)
+         "google", "meta", "apple", "amazon", "nvidia",
+         "tiktok", "bytedance", "netflix",
+         # MSFT+ companies without a standard ATS / previously stubbed
+         "doordash", "datadog", "rippling",
+         # Big tech / high-TC on Workday or custom sites
+         "adobe", "salesforce", "servicenow",
+         "intel", "amd", "qualcomm",
+         "tesla", "uber", "shopify", "spotify", "snap",
+         "waymo", "zoox", "cruise", "figure", "anduril",
+         "crowdstrike", "palo alto networks",
+         "airtable", "duolingo", "riot games", "tenstorrent",
+     ]},
 ]
 
 # Companies to temporarily skip without deleting from COMPANIES.
@@ -195,12 +203,6 @@ SCRAPERS = {
 }
 
 
-# --- Custom scraper stubs. Each needs a bespoke scraper on its own careers site. ---
-def scrape_doordash(): return []   # TODO: careersatdoordash.com (custom JS-rendered)
-def scrape_datadog():  return []   # TODO: careers.datadoghq.com (custom, not Workday)
-def scrape_rippling(): return []   # TODO: rippling.com/careers (custom)
-
-
 def notify(job):
     if not NTFY_TOPIC:
         print(f"[dry-run] would notify: {job['company']} — {job['title']}")
@@ -232,10 +234,7 @@ def main():
             print(f"{company['name']}: [disabled]")
             continue
         try:
-            if company["type"] == "custom":
-                jobs = globals()[company["fn"]]()
-            else:
-                jobs = SCRAPERS[company["type"]](company)
+            jobs = SCRAPERS[company["type"]](company)
         except Exception as e:
             print(f"[error] {company['name']}: {e}")
             continue

@@ -45,3 +45,9 @@ Local test: 2758 matching roles across 59 companies, 0 errors. SpaceX alone cont
 - ID prefix `simplify-<uuid>`.
 - Dropped the now-redundant `scrape_google` / `scrape_meta` / `scrape_apple` / `scrape_amazon` / `scrape_nvidia` stubs and their COMPANIES entries.
 - Local test: simplify-bigtech contributes 215 matches (TikTok 128, ByteDance 32, Meta 21, NVIDIA 12, Netflix 8, Amazon 8, Apple 6, Google 0). Notification latency for these companies now ~1-2h (Simplify contributor lag) + ~10min (our cron) = tolerable for FAANG-class postings with wide windows.
+
+### Expanded simplify-bigtech filter_to (MSFT+ tier)
+- Added 25 more target companies to the Simplify filter, covering any MSFT-or-better company we don't already scrape directly.
+- Rolled doordash/datadog/rippling into Simplify coverage — dropped their individual custom stubs and the `scrape_doordash/datadog/rippling` functions. Also removed the now-unused `custom` type branch in `main()`.
+- New filter_to list (33 companies): google, meta, apple, amazon, nvidia, tiktok, bytedance, netflix; doordash, datadog, rippling; adobe, salesforce, servicenow; intel, amd, qualcomm; tesla, uber, shopify, spotify, snap; waymo, zoox, cruise, figure, anduril; crowdstrike, palo alto networks; airtable, duolingo, riot games, tenstorrent.
+- Many currently 0 active (off-season, April 2026); wired in now so they auto-cover when summer-2027 postings open ~July 2026. Local test: simplify-bigtech 273 matches. Total 3025 across all sources.
