@@ -51,3 +51,7 @@ Local test: 2758 matching roles across 59 companies, 0 errors. SpaceX alone cont
 - Rolled doordash/datadog/rippling into Simplify coverage — dropped their individual custom stubs and the `scrape_doordash/datadog/rippling` functions. Also removed the now-unused `custom` type branch in `main()`.
 - New filter_to list (33 companies): google, meta, apple, amazon, nvidia, tiktok, bytedance, netflix; doordash, datadog, rippling; adobe, salesforce, servicenow; intel, amd, qualcomm; tesla, uber, shopify, spotify, snap; waymo, zoox, cruise, figure, anduril; crowdstrike, palo alto networks; airtable, duolingo, riot games, tenstorrent.
 - Many currently 0 active (off-season, April 2026); wired in now so they auto-cover when summer-2027 postings open ~July 2026. Local test: simplify-bigtech 273 matches. Total 3025 across all sources.
+
+### Bugfix — seen.json phantom re-notifications
+- `main()` was replacing `seen.json` with only currently-visible IDs each run. When an ATS briefly returned empty (e.g. OpenAI Ashby flaked for one run, returning 0 of ~318 jobs), those IDs dropped from `seen.json`. On the next successful run, all ~313 IDs came back and were re-notified as "new" — a 313-notification storm for jobs that had been visible from the baseline.
+- Fixed by unioning old `seen_ids` with currently-visible IDs before writing: `all_ids = sorted(seen_ids | {j['id'] for j in all_jobs})`. Once an ID is seen, it stays. `seen.json` grows linearly (~100KB/month at current rate), manageable for months before any expiry is needed.

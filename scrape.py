@@ -251,7 +251,9 @@ def main():
             print(f"  NEW: {job['company']} — {job['title']}")
             notify(job)
 
-    all_ids = list({j["id"] for j in all_jobs})
+    # Union (not replace): if an ATS briefly returns empty, we don't want the
+    # next successful response to re-notify the same IDs. Once seen, always seen.
+    all_ids = sorted(seen_ids | {j["id"] for j in all_jobs})
     STATE_FILE.write_text(json.dumps({"ids": all_ids}, indent=2))
 
 
