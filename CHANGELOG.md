@@ -55,3 +55,41 @@ Local test: 2758 matching roles across 59 companies, 0 errors. SpaceX alone cont
 ### Bugfix — seen.json phantom re-notifications
 - `main()` was replacing `seen.json` with only currently-visible IDs each run. When an ATS briefly returned empty (e.g. OpenAI Ashby flaked for one run, returning 0 of ~318 jobs), those IDs dropped from `seen.json`. On the next successful run, all ~313 IDs came back and were re-notified as "new" — a 313-notification storm for jobs that had been visible from the baseline.
 - Fixed by unioning old `seen_ids` with currently-visible IDs before writing: `all_ids = sorted(seen_ids | {j['id'] for j in all_jobs})`. Once an ID is seen, it stays. `seen.json` grows linearly (~100KB/month at current rate), manageable for months before any expiry is needed.
+
+### Trim COMPANIES list to MSFT-or-better tier
+- User feedback: too many lower-tier postings were leaking through. Cut 15 Greenhouse entries to enforce a Microsoft-or-better bar.
+- Specific removes per user request: spacex (volume), cockroachdb, ridgeline, squarespace.
+- Smaller-tier fintechs cut: mercury, affirm, brex, chime, gemini, sofi, marqeta. (Bar set by stripe / plaid / robinhood / coinbase / block, which stay.)
+- Sub-MSFT SaaS/devtools cut: asana, elastic, gitlab, dropbox.
+- Ashby and Lever entries left untouched — already MSFT-or-better.
+- simplify-bigtech filter_to left untouched — covers FAANG-tier through that source already.
+- Local test: 2054 matches across 45 entries (down from 3025 across 60). Keyword filter unchanged per user's recall-over-precision preference.
+
+### Added 4 hot AI/devtools companies
+- Greenhouse: glean (slug `gleanwork`, 39 matches), cerebras (slug `cerebrassystems`, 36 matches).
+- Ashby: modal (9 matches), decagon (101 jobs but only 7 match keywords; mostly customer-success/sales roles).
+- Brainstormed candidates that don't expose a standard ATS API and aren't in SimplifyJobs either — would each need a custom scraper, so deferred: hugging face, codeium, groq, magic.dev, sourcegraph. User to handle these via native LinkedIn / careers-page alerts.
+- Local test: 2145 matches across 49 entries.
+
+### Direct Meta scraper (replaces Simplify's Meta coverage)
+- Added `meta_scraper.py` (custom GraphQL flow: GET careers page → extract LSD token → POST to /graphql with doc_id). Patched by adding required `sec-fetch-*` headers to both GET and POST (without them Meta's edge returns a generic 400). Also corrected response-shape parsing — actual key is `job_search_with_featured_jobs.all_jobs`, not `job_search`.
+- New `fetch_meta_internships()` helper used by scrape.py.
+- New scraper type `meta` registered in SCRAPERS dict, plus a `{"name": "meta", "type": "meta"}` entry in COMPANIES.
+- Removed `"meta"` from `simplify-bigtech.filter_to` to prevent duplicate notifications (different IDs from each source for the same job).
+- Local test: meta = 20 matches (all PhD Research Scientist internships — fully expected for late-April off-season; SWE intern reqs typically open July).
+- Brittleness note: Meta's `DOC_ID` is hardcoded and rotates every few months. When the scraper starts returning empty / "doc_id" errors, recapture from DevTools Network tab on metacareers.com/jobs (look for the CareersJobSearchResultsDataQuery POST).
+
+### Direct Google scraper (replaces Simplify's Google coverage)
+- Added `google_scraper.py` (custom batchexecute RPC: GET careers page → extract `bl` + `f.sid` tokens → POST to /batchexecute with f.req payload). Three fixes from the original draft:
+  - Removed `at` (SNlM0e) token requirement — Google no longer ships it on the unauthenticated careers page, and batchexecute returns full data without it.
+  - Replaced manual chunk-length parsing with `json.JSONDecoder.raw_decode()`, because Google's emitted chunk lengths now include trailing newlines / next-chunk-prefix bytes that confuse `json.loads`.
+  - Corrected the schema indices in `extract_jobs` — entry[3] is HTML description, not locations; locations live at entry[9].
+- New `fetch_google_internships()` paginates up to 10 pages.
+- Removed `"google"` from `simplify-bigtech.filter_to`.
+- Local test: google = 6 matches (out of 17 total internships; the 11 filtered out are mostly "Student Researcher" titles that don't trigger any INCLUDE keyword).
+- Brittleness note: `RPC_ID = "r06xKb"` and the regex var names (`cfb2h`, `FdrFJe`) all rotate when Google updates their JS bundle. When that happens, the scraper raises and the new alert path (below) fires a ntfy notification.
+
+### Scraper-failure alerting via ntfy
+- New `notify_scraper_error(scraper_name, error)` fires a `default`-priority ntfy notification with title "Scraper broken" when any scraper in `main()` raises. Body is `<scraper>: <error>`, truncated to 200 chars.
+- `main()` now collects per-company errors during the loop and (only after the first-run guard) emits one ntfy alert per failed scraper per run. Important for the brittle Google/Meta paths where upstream API changes would otherwise degrade silently.
+- Deliberately did NOT add a "0-results floor check" alongside this — transient ATS hiccups returning empty are common, and we already neutralized them via the `seen.json` union fix; a floor check would re-introduce false-positive alerts.

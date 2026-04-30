@@ -3,6 +3,9 @@ import os
 import pathlib
 import requests
 
+from meta_scraper import fetch_meta_internships
+from google_scraper import fetch_google_internships
+
 STATE_FILE = pathlib.Path("seen.json")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 
@@ -19,35 +22,22 @@ COMPANIES = [
     {"name": "robinhood",  "type": "greenhouse", "slug": "robinhood"},
     {"name": "coinbase",   "type": "greenhouse", "slug": "coinbase"},
     {"name": "reddit",     "type": "greenhouse", "slug": "reddit"},
-    {"name": "mercury",    "type": "greenhouse", "slug": "mercury"},
     {"name": "pinterest",  "type": "greenhouse", "slug": "pinterest"},
     {"name": "cloudflare", "type": "greenhouse", "slug": "cloudflare"},
-    {"name": "affirm",     "type": "greenhouse", "slug": "affirm"},
-    {"name": "brex",       "type": "greenhouse", "slug": "brex"},
     {"name": "instacart",  "type": "greenhouse", "slug": "instacart"},
-    {"name": "chime",      "type": "greenhouse", "slug": "chime"},
-    {"name": "scale",         "type": "greenhouse", "slug": "scaleai"},
-    {"name": "asana",         "type": "greenhouse", "slug": "asana"},
-    {"name": "twitch",        "type": "greenhouse", "slug": "twitch"},
-    {"name": "roblox",        "type": "greenhouse", "slug": "roblox"},
-    {"name": "block",         "type": "greenhouse", "slug": "block"},
-    {"name": "gemini",        "type": "greenhouse", "slug": "gemini"},
-    {"name": "sofi",          "type": "greenhouse", "slug": "sofi"},
-    {"name": "marqeta",       "type": "greenhouse", "slug": "marqeta"},
-    {"name": "samsara",       "type": "greenhouse", "slug": "samsara"},
-    {"name": "rubrik",        "type": "greenhouse", "slug": "rubrik"},
-    {"name": "mongodb",       "type": "greenhouse", "slug": "mongodb"},
-    {"name": "elastic",       "type": "greenhouse", "slug": "elastic"},
-    {"name": "gitlab",        "type": "greenhouse", "slug": "gitlab"},
-    {"name": "dropbox",       "type": "greenhouse", "slug": "dropbox"},
-    {"name": "lyft",          "type": "greenhouse", "slug": "lyft"},
-    {"name": "xai",           "type": "greenhouse", "slug": "xai"},
-    {"name": "together",      "type": "greenhouse", "slug": "togetherai"},
-    {"name": "spacex",        "type": "greenhouse", "slug": "spacex"},
-    {"name": "neuralink",     "type": "greenhouse", "slug": "neuralink"},
-    {"name": "cockroachdb",   "type": "greenhouse", "slug": "cockroachlabs"},
-    {"name": "ridgeline",     "type": "greenhouse", "slug": "ridgeline"},
-    {"name": "squarespace",   "type": "greenhouse", "slug": "squarespace"},
+    {"name": "scale",      "type": "greenhouse", "slug": "scaleai"},
+    {"name": "twitch",     "type": "greenhouse", "slug": "twitch"},
+    {"name": "roblox",     "type": "greenhouse", "slug": "roblox"},
+    {"name": "block",      "type": "greenhouse", "slug": "block"},
+    {"name": "samsara",    "type": "greenhouse", "slug": "samsara"},
+    {"name": "rubrik",     "type": "greenhouse", "slug": "rubrik"},
+    {"name": "mongodb",    "type": "greenhouse", "slug": "mongodb"},
+    {"name": "lyft",       "type": "greenhouse", "slug": "lyft"},
+    {"name": "xai",        "type": "greenhouse", "slug": "xai"},
+    {"name": "together",   "type": "greenhouse", "slug": "togetherai"},
+    {"name": "neuralink",  "type": "greenhouse", "slug": "neuralink"},
+    {"name": "glean",      "type": "greenhouse", "slug": "gleanwork"},
+    {"name": "cerebras",   "type": "greenhouse", "slug": "cerebrassystems"},
 
     # --- Ashby ---
     {"name": "linear",     "type": "ashby", "slug": "linear"},
@@ -68,19 +58,29 @@ COMPANIES = [
     {"name": "runway",     "type": "ashby", "slug": "runway"},
     {"name": "polymarket", "type": "ashby", "slug": "polymarket"},
     {"name": "kalshi",     "type": "ashby", "slug": "kalshi"},
+    {"name": "modal",      "type": "ashby", "slug": "modal"},
+    {"name": "decagon",    "type": "ashby", "slug": "decagon"},
 
     # --- Lever ---
     {"name": "netflix",    "type": "lever", "slug": "netflix"},
     {"name": "palantir",   "type": "lever", "slug": "palantir"},
     {"name": "mistral",    "type": "lever", "slug": "mistral"},
 
+    # --- Meta (custom GraphQL via meta_scraper.py) ---
+    {"name": "meta",       "type": "meta"},
+
+    # --- Google (custom batchexecute via google_scraper.py) ---
+    {"name": "google",     "type": "google"},
+
     # --- SimplifyJobs (community-maintained feed covering any MSFT+ tier company
     #     whose job board we don't scrape directly. ~1-2h contributor lag, fine
     #     for companies with wide intern-application windows). ---
     {"name": "simplify-bigtech", "type": "simplify",
      "filter_to": [
-         # Big tech with painful boards (batchexecute / GraphQL / Workday)
-         "google", "meta", "apple", "amazon", "nvidia",
+         # Big tech with painful boards (Apple/Nvidia Workday). Meta and Google
+         # have moved to direct scrapers (meta_scraper.py / google_scraper.py)
+         # and must NOT appear here or we'd get duplicate notifications.
+         "apple", "amazon", "nvidia",
          "tiktok", "bytedance", "netflix",
          # MSFT+ companies without a standard ATS / previously stubbed
          "doordash", "datadog", "rippling",
@@ -195,11 +195,39 @@ def scrape_simplify(company):
     return results
 
 
+def scrape_meta(company):
+    return [
+        {
+            "id": f"meta-{j['id']}",
+            "company": "meta",
+            "title": j["title"],
+            "url": j["url"],
+        }
+        for j in fetch_meta_internships()
+        if matches_keywords(j["title"])
+    ]
+
+
+def scrape_google(company):
+    return [
+        {
+            "id": f"google-{j['id']}",
+            "company": "google",
+            "title": j["title"],
+            "url": j["url"],
+        }
+        for j in fetch_google_internships()
+        if matches_keywords(j["title"])
+    ]
+
+
 SCRAPERS = {
     "greenhouse": scrape_greenhouse,
     "lever":      scrape_lever,
     "ashby":      scrape_ashby,
     "simplify":   scrape_simplify,
+    "meta":       scrape_meta,
+    "google":     scrape_google,
 }
 
 
@@ -219,6 +247,25 @@ def notify(job):
     )
 
 
+def notify_scraper_error(scraper_name: str, error: str):
+    """Surfaces brittle-scraper failures (Google batchexecute, Meta GraphQL, etc.)
+    so we know within ~10 min when an upstream API change breaks something —
+    instead of silently degrading. Body is truncated to keep ntfy happy."""
+    body = f"{scraper_name}: {error}"[:200]
+    if not NTFY_TOPIC:
+        print(f"[dry-run] would alert: {body}")
+        return
+    requests.post(
+        f"https://ntfy.sh/{NTFY_TOPIC}",
+        data=body.encode(),
+        headers={
+            "Title": "Scraper broken",
+            "Priority": "default",
+            "Tags": "warning",
+        },
+    )
+
+
 def main():
     if STATE_FILE.exists():
         state = json.loads(STATE_FILE.read_text())
@@ -229,6 +276,7 @@ def main():
         first_run = True
 
     all_jobs = []
+    errors: list[tuple[str, str]] = []
     for company in COMPANIES:
         if company["name"] in COMPANIES_DISABLED:
             print(f"{company['name']}: [disabled]")
@@ -237,6 +285,7 @@ def main():
             jobs = SCRAPERS[company["type"]](company)
         except Exception as e:
             print(f"[error] {company['name']}: {e}")
+            errors.append((company["name"], str(e)))
             continue
         print(f"{company['name']}: {len(jobs)} matching roles")
         all_jobs.extend(jobs)
@@ -250,6 +299,10 @@ def main():
         for job in new_jobs:
             print(f"  NEW: {job['company']} — {job['title']}")
             notify(job)
+        # Surface scraper failures so brittle endpoints (Google/Meta) don't
+        # degrade silently. Off during first_run to avoid baseline-seed noise.
+        for scraper_name, err in errors:
+            notify_scraper_error(scraper_name, err)
 
     # Union (not replace): if an ATS briefly returns empty, we don't want the
     # next successful response to re-notify the same IDs. Once seen, always seen.
