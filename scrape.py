@@ -283,6 +283,12 @@ def main():
             continue
         try:
             jobs = SCRAPERS[company["type"]](company)
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            # Transient network failures (Ashby/Lever slow on big boards, custom
+            # endpoints rate-limited from datacenter IPs). seen.json union fix
+            # already neutralizes the notification impact, so just log — no alert.
+            print(f"[timeout] {company['name']}: {e}")
+            continue
         except Exception as e:
             print(f"[error] {company['name']}: {e}")
             errors.append((company["name"], str(e)))
