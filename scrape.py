@@ -95,7 +95,9 @@ COMPANIES = [
 ]
 
 # Companies to temporarily skip without deleting from COMPANIES.
-COMPANIES_DISABLED = set()
+COMPANIES_DISABLED = {
+    "coinbase",  # Greenhouse 404'd as of 2026-05-06; site may be down or migrated. Re-enable after verifying new ATS.
+}
 
 INCLUDE_KEYWORDS = [
     "intern", "internship",
