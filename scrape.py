@@ -5,6 +5,7 @@ import requests
 
 from meta_scraper import fetch_meta_internships
 from google_scraper import fetch_google_internships
+from apple_scraper import fetch_apple_internships
 
 STATE_FILE = pathlib.Path("seen.json")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
@@ -72,15 +73,19 @@ COMPANIES = [
     # --- Google (custom batchexecute via google_scraper.py) ---
     {"name": "google",     "type": "google"},
 
+    # --- Apple (custom CSRF + JSON search via apple_scraper.py) ---
+    {"name": "apple",      "type": "apple"},
+
     # --- SimplifyJobs (community-maintained feed covering any MSFT+ tier company
     #     whose job board we don't scrape directly. ~1-2h contributor lag, fine
     #     for companies with wide intern-application windows). ---
     {"name": "simplify-bigtech", "type": "simplify",
      "filter_to": [
-         # Big tech with painful boards (Apple/Nvidia Workday). Meta and Google
-         # have moved to direct scrapers (meta_scraper.py / google_scraper.py)
-         # and must NOT appear here or we'd get duplicate notifications.
-         "apple", "amazon", "nvidia",
+         # Big tech with painful boards (Nvidia Workday). Meta, Google, and
+         # Apple have moved to direct scrapers (meta_scraper.py /
+         # google_scraper.py / apple_scraper.py) and must NOT appear here or
+         # we'd get duplicate notifications.
+         "amazon", "nvidia",
          "tiktok", "bytedance", "netflix",
          # MSFT+ companies without a standard ATS / previously stubbed
          "doordash", "datadog", "rippling",
@@ -223,6 +228,22 @@ def scrape_google(company):
     ]
 
 
+def scrape_apple(company):
+    # apple_scraper already filters server-side via query="internship", so
+    # essentially every result here matches the intent. Still run it through
+    # matches_keywords for consistency with all other sources.
+    return [
+        {
+            "id": f"apple-{j['id']}",
+            "company": "apple",
+            "title": j["title"],
+            "url": j["url"],
+        }
+        for j in fetch_apple_internships()
+        if matches_keywords(j["title"])
+    ]
+
+
 SCRAPERS = {
     "greenhouse": scrape_greenhouse,
     "lever":      scrape_lever,
@@ -230,6 +251,7 @@ SCRAPERS = {
     "simplify":   scrape_simplify,
     "meta":       scrape_meta,
     "google":     scrape_google,
+    "apple":      scrape_apple,
 }
 
 
