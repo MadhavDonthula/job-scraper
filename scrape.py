@@ -39,6 +39,8 @@ COMPANIES = [
     {"name": "neuralink",  "type": "greenhouse", "slug": "neuralink"},
     {"name": "glean",      "type": "greenhouse", "slug": "gleanwork"},
     {"name": "cerebras",   "type": "greenhouse", "slug": "cerebrassystems"},
+    {"name": "gitlab",     "type": "greenhouse", "slug": "gitlab"},
+    {"name": "twilio",     "type": "greenhouse", "slug": "twilio"},
 
     # --- Ashby ---
     {"name": "linear",     "type": "ashby", "slug": "linear"},
@@ -61,6 +63,7 @@ COMPANIES = [
     {"name": "kalshi",     "type": "ashby", "slug": "kalshi"},
     {"name": "modal",      "type": "ashby", "slug": "modal"},
     {"name": "decagon",    "type": "ashby", "slug": "decagon"},
+    {"name": "supabase",   "type": "ashby", "slug": "supabase"},
 
     # --- Lever ---
     {"name": "netflix",    "type": "lever", "slug": "netflix"},
@@ -85,8 +88,11 @@ COMPANIES = [
          # Apple have moved to direct scrapers (meta_scraper.py /
          # google_scraper.py / apple_scraper.py) and must NOT appear here or
          # we'd get duplicate notifications.
-         "amazon", "nvidia",
+         "amazon", "nvidia", "microsoft", "spacex",
          "tiktok", "bytedance", "netflix",
+         # Big tech / infra-SaaS on custom or Workday boards (not on GH/Lever/Ashby)
+         "oracle", "ibm", "cisco", "github", "linkedin",
+         "atlassian", "confluent", "intuit", "workday",
          # MSFT+ companies without a standard ATS / previously stubbed
          "doordash", "datadog", "rippling",
          # Big tech / high-TC on Workday or custom sites
