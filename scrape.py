@@ -42,6 +42,33 @@ COMPANIES = [
     {"name": "wiz",        "type": "greenhouse", "slug": "wizinc"},
     {"name": "gitlab",     "type": "greenhouse", "slug": "gitlab"},
     {"name": "twilio",     "type": "greenhouse", "slug": "twilio"},
+    # fintech
+    {"name": "brex",       "type": "greenhouse", "slug": "brex"},
+    {"name": "mercury",    "type": "greenhouse", "slug": "mercury"},
+    {"name": "gusto",      "type": "greenhouse", "slug": "gusto"},
+    {"name": "chime",      "type": "greenhouse", "slug": "chime"},
+    {"name": "affirm",     "type": "greenhouse", "slug": "affirm"},
+    {"name": "marqeta",    "type": "greenhouse", "slug": "marqeta"},
+    {"name": "ripple",     "type": "greenhouse", "slug": "ripple"},
+    {"name": "gemini",     "type": "greenhouse", "slug": "gemini"},
+    # data / infra / dev-tools
+    {"name": "fivetran",   "type": "greenhouse", "slug": "fivetran"},
+    {"name": "cockroach",  "type": "greenhouse", "slug": "cockroachlabs"},
+    {"name": "clickhouse", "type": "greenhouse", "slug": "clickhouse"},
+    {"name": "elastic",    "type": "greenhouse", "slug": "elastic"},
+    {"name": "planetscale","type": "greenhouse", "slug": "planetscale"},
+    {"name": "netlify",    "type": "greenhouse", "slug": "netlify"},
+    {"name": "starburst",  "type": "greenhouse", "slug": "starburst"},
+    {"name": "amplitude",  "type": "greenhouse", "slug": "amplitude"},
+    {"name": "mixpanel",   "type": "greenhouse", "slug": "mixpanel"},
+    {"name": "grafana",    "type": "greenhouse", "slug": "grafanalabs"},
+    {"name": "okta",       "type": "greenhouse", "slug": "okta"},
+    {"name": "asana",      "type": "greenhouse", "slug": "asana"},
+    {"name": "nuro",       "type": "greenhouse", "slug": "nuro"},
+    # AI
+    {"name": "sambanova",  "type": "greenhouse", "slug": "sambanovasystems"},
+    {"name": "stability",  "type": "greenhouse", "slug": "stabilityai"},
+    {"name": "imbue",      "type": "greenhouse", "slug": "imbue"},
 
     # --- Ashby ---
     {"name": "linear",     "type": "ashby", "slug": "linear"},
@@ -66,11 +93,35 @@ COMPANIES = [
     {"name": "decagon",    "type": "ashby", "slug": "decagon"},
     {"name": "supabase",   "type": "ashby", "slug": "supabase"},
     {"name": "cerebras",   "type": "ashby", "slug": "cerebras"},
+    # AI labs
+    {"name": "anyscale",   "type": "ashby", "slug": "anyscale"},
+    {"name": "baseten",    "type": "ashby", "slug": "baseten"},
+    {"name": "fireworks",  "type": "ashby", "slug": "fireworks"},
+    {"name": "cognition",  "type": "ashby", "slug": "cognition"},
+    {"name": "poolside",   "type": "ashby", "slug": "poolside"},
+    {"name": "lambda",     "type": "ashby", "slug": "lambda"},
+    {"name": "crusoe",     "type": "ashby", "slug": "crusoe"},
+    {"name": "suno",       "type": "ashby", "slug": "suno"},
+    # infra / dev-tools
+    {"name": "temporal",   "type": "ashby", "slug": "temporal"},
+    {"name": "vanta",      "type": "ashby", "slug": "vanta"},
+    {"name": "zapier",     "type": "ashby", "slug": "zapier"},
+    {"name": "miro",       "type": "ashby", "slug": "miro"},
+    {"name": "hex",        "type": "ashby", "slug": "hex"},
+    {"name": "render",     "type": "ashby", "slug": "render"},
+    {"name": "prefect",    "type": "ashby", "slug": "prefect"},
+    {"name": "astronomer", "type": "ashby", "slug": "astronomer"},
+    {"name": "materialize","type": "ashby", "slug": "materialize"},
+    {"name": "airbyte",    "type": "ashby", "slug": "airbyte"},
+    {"name": "posthog",    "type": "ashby", "slug": "posthog"},
+    {"name": "skydio",     "type": "ashby", "slug": "skydio"},
+    {"name": "opensea",    "type": "ashby", "slug": "opensea"},
 
     # --- Lever ---
     # netflix left Lever (404 as of 2026-08); it's covered via simplify-bigtech below.
     {"name": "palantir",   "type": "lever", "slug": "palantir"},
     {"name": "mistral",    "type": "lever", "slug": "mistral"},
+    {"name": "anchorage",  "type": "lever", "slug": "anchorage"},
 
     # --- Meta (custom GraphQL via meta_scraper.py) ---
     {"name": "meta",       "type": "meta"},
