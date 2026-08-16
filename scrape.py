@@ -38,7 +38,6 @@ COMPANIES = [
     {"name": "together",   "type": "greenhouse", "slug": "togetherai"},
     {"name": "neuralink",  "type": "greenhouse", "slug": "neuralink"},
     {"name": "glean",      "type": "greenhouse", "slug": "gleanwork"},
-    {"name": "cerebras",   "type": "greenhouse", "slug": "cerebrassystems"},
     {"name": "gitlab",     "type": "greenhouse", "slug": "gitlab"},
     {"name": "twilio",     "type": "greenhouse", "slug": "twilio"},
 
@@ -64,9 +63,10 @@ COMPANIES = [
     {"name": "modal",      "type": "ashby", "slug": "modal"},
     {"name": "decagon",    "type": "ashby", "slug": "decagon"},
     {"name": "supabase",   "type": "ashby", "slug": "supabase"},
+    {"name": "cerebras",   "type": "ashby", "slug": "cerebras"},
 
     # --- Lever ---
-    {"name": "netflix",    "type": "lever", "slug": "netflix"},
+    # netflix left Lever (404 as of 2026-08); it's covered via simplify-bigtech below.
     {"name": "palantir",   "type": "lever", "slug": "palantir"},
     {"name": "mistral",    "type": "lever", "slug": "mistral"},
 
@@ -318,6 +318,16 @@ def main():
             # endpoints rate-limited from datacenter IPs). seen.json union fix
             # already neutralizes the notification impact, so just log — no alert.
             print(f"[timeout] {company['name']}: {e}")
+            continue
+        except requests.exceptions.HTTPError as e:
+            # 429s are transient rate-limits (e.g. Meta's edge throttling repeated
+            # hits from one IP). Don't fire a "scraper broken" alert for these —
+            # the next poll recovers. Any other HTTP error is a real breakage.
+            if e.response is not None and e.response.status_code == 429:
+                print(f"[rate-limited] {company['name']}: {e}")
+                continue
+            print(f"[error] {company['name']}: {e}")
+            errors.append((company["name"], str(e)))
             continue
         except Exception as e:
             print(f"[error] {company['name']}: {e}")
