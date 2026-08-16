@@ -38,6 +38,8 @@ COMPANIES = [
     {"name": "together",   "type": "greenhouse", "slug": "togetherai"},
     {"name": "neuralink",  "type": "greenhouse", "slug": "neuralink"},
     {"name": "glean",      "type": "greenhouse", "slug": "gleanwork"},
+    {"name": "dropbox",    "type": "greenhouse", "slug": "dropbox"},
+    {"name": "wiz",        "type": "greenhouse", "slug": "wizinc"},
     {"name": "gitlab",     "type": "greenhouse", "slug": "gitlab"},
     {"name": "twilio",     "type": "greenhouse", "slug": "twilio"},
 
@@ -102,6 +104,8 @@ COMPANIES = [
          "waymo", "zoox", "cruise", "figure", "anduril",
          "crowdstrike", "palo alto networks",
          "airtable", "duolingo", "riot games", "tenstorrent",
+         # Payments / enterprise on Workday or custom boards (not on GH/Lever/Ashby)
+         "canva", "zoom", "visa", "mastercard",
      ]},
 ]
 
